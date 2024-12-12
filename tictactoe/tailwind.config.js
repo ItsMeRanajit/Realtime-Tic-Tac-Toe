@@ -6,7 +6,7 @@ export default {
       fontFamily: {
         base: ["Ubuntu", "serif"],
         base2: ["Shadows Into Light", "cursive"],
-        base3: ["cursive"],
+        base3: ["Arial","sans-serif"],
       },
     },
   },
