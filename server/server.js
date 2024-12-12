@@ -3,7 +3,13 @@ import { Server } from "socket.io";
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
-  cors: "http://localhost:5173/",
+  cors: {
+    origin: "https://realtime-tic-tac-toe.vercel.app",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true,
+  },
+  transports: ["websocket"],
 });
 
 const allUsers = new Map();
