@@ -152,8 +152,8 @@ const playOnline = ({ setOption, option }) => {
 
   const sendText = () => {
     if (message.trim() !== "") {
-      console.log(message.trim());
-      useSocket?.emit("messageSent", message);
+      //console.log(message.trim());
+      useSocket?.emit("messageSent", message.trim());
     }
     setMessage("");
   };
@@ -192,13 +192,13 @@ const playOnline = ({ setOption, option }) => {
 
   useEffect(() => {
     useSocket?.on("messageRecieved", function (data) {
-      console.log(data);
+      //console.log(data);
       if (messageContent.current) {
         const messageElement = document.createElement("p");
         messageElement.textContent = data.message;
         if (data.sender === useSocket.id) messageElement.className = "otherMsg";
         else messageElement.className = "myMsg";
-        console.log(messageElement);
+        //console.log(messageElement);
 
         messageContent.current.appendChild(messageElement);
       }
