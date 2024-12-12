@@ -99,7 +99,7 @@ const playOnline = ({ setOption, option }) => {
     }
     setPlayerName(name.value);
 
-    const socket = io("http://localhost:3000", {
+    const socket = io("https://realtime-tic-tac-toe-server.up.railway.app", {
       autoConnect: true,
     });
 
