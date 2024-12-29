@@ -378,14 +378,15 @@ const playOnline = ({ setOption, option }) => {
           </div>
         )
       ) : (
-        <button
-          className="h-16 text-xl tracking-widest transition-all w-44 activeName font-base3"
-          onClick={() => {
-            startSocket();
-          }}
-        >
-          Play Online
-        </button>
+        // <button
+        //   className="h-16 text-xl tracking-widest transition-all w-44 activeName font-base3"
+        //   onClick={() => {
+        //     startSocket();
+        //   }}
+        // >
+        //   Play Online
+        // </button>
+      null
       )}
       {winner || isDraw ? (
         <button
