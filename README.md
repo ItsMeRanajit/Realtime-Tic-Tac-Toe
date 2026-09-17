@@ -4,6 +4,14 @@ A high-performance, anonymous, real-time multiplayer Tic-Tac-Toe platform engine
 
 ---
 
+## 🌐 Live Deployments
+
+- **Live Application (Frontend)**: [https://realtime-tic-tac-toe.vercel.app](https://realtime-tic-tac-toe.vercel.app/)
+- **Live Backend Engine (Render)**: [https://realtime-tic-tac-toe-73lu.onrender.com](https://realtime-tic-tac-toe-73lu.onrender.com)
+- **Health Check Endpoint**: [https://realtime-tic-tac-toe-73lu.onrender.com/health](https://realtime-tic-tac-toe-73lu.onrender.com/health)
+
+---
+
 ## Architecture Overview
 
 The system uses an **ephemeral in-memory server-authoritative architecture**. No persistent database, user accounts, or login sessions exist. All matchmaking queues, rooms, turn timers, and rate limiters operate in memory with auto-cleanup upon room disposal.
@@ -372,6 +380,33 @@ npm run dev
 ### 3. Run Automated Integration Tests
 
 ```bash
+# Run against local server
 cd server
 node test_integration.js
+
+# Or run directly against live Render deployment
+$env:TEST_SERVER_URL="https://realtime-tic-tac-toe-73lu.onrender.com" # PowerShell
+node test_integration.js
 ```
+
+---
+
+## 🚀 Deployment Configuration
+
+### Frontend (Vercel)
+- **Framework**: Vite
+- **Root Directory**: `tictactoe`
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Environment Variables**:
+  - `VITE_SERVER_URL`: `https://realtime-tic-tac-toe-73lu.onrender.com`
+
+### Backend (Render)
+- **Environment**: Node
+- **Root Directory**: `server`
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
+- **Environment Variables**:
+  - `PORT`: `3000` (or dynamically allocated by Render)
+  - `CLIENT_URL`: `http://localhost:5173,https://realtime-tic-tac-toe.vercel.app`
+

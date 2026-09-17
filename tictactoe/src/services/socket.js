@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-// Resolve server endpoint dynamically without hardcoded localhost in production
+// Resolve server endpoint dynamically with production Render deployment as default fallback
 export function getServerUrl() {
   if (import.meta.env.VITE_SERVER_URL) {
     return import.meta.env.VITE_SERVER_URL;
@@ -10,10 +10,10 @@ export function getServerUrl() {
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
       return "http://localhost:3000";
     }
-    // In production or mobile, connect to current origin or configured host
-    return window.location.origin;
+    // Deployed production environment defaults to hosted Render server
+    return "https://realtime-tic-tac-toe-73lu.onrender.com";
   }
-  return "http://localhost:3000";
+  return "https://realtime-tic-tac-toe-73lu.onrender.com";
 }
 
 let socketInstance = null;

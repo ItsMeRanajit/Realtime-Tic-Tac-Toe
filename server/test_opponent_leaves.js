@@ -1,6 +1,6 @@
 import { io } from "../tictactoe/node_modules/socket.io-client/build/esm/index.js";
 
-const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = process.env.TEST_SERVER_URL || "http://localhost:3000";
 
 async function runOpponentLeavesTest() {
   console.log("=== Testing Opponent Leaving After Game Finish (Rematch Disabled) ===");
@@ -19,16 +19,22 @@ async function runOpponentLeavesTest() {
   });
 
   // Join matchmaking
+  let pX = null;
+  let pO = null;
   const startPromise = new Promise((resolve) => {
     let count = 0;
-    p1.on("game:match_start", () => {
+    const handleStart = (playerSocket) => (data) => {
+      const myInfo = data.players.find((p) => p.socketId === playerSocket.id);
+      if (myInfo?.symbol === "X") {
+        pX = playerSocket;
+      } else if (myInfo?.symbol === "O") {
+        pO = playerSocket;
+      }
       count++;
       if (count === 2) resolve();
-    });
-    p2.on("game:match_start", () => {
-      count++;
-      if (count === 2) resolve();
-    });
+    };
+    p1.on("game:match_start", handleStart(p1));
+    p2.on("game:match_start", handleStart(p2));
   });
 
   p1.emit("matchmaking:join", { playerName: "PlayerOne" });
@@ -36,19 +42,22 @@ async function runOpponentLeavesTest() {
   await startPromise;
   console.log("✓ Match started between PlayerOne and PlayerTwo.");
 
-  // Play to a win for X
-  // Check who is X
-  let pX = p1;
-  let pO = p2;
-  // Make 5 moves to win: 0, 3, 1, 4, 2
-  pX.emit("game:move", { cellIndex: 0 });
-  await new Promise((r) => setTimeout(r, 80));
-  pO.emit("game:move", { cellIndex: 3 });
-  await new Promise((r) => setTimeout(r, 80));
-  pX.emit("game:move", { cellIndex: 1 });
-  await new Promise((r) => setTimeout(r, 80));
-  pO.emit("game:move", { cellIndex: 4 });
-  await new Promise((r) => setTimeout(r, 80));
+  const makeMove = (player, cellIndex) => {
+    return new Promise((resolve) => {
+      const handler = () => {
+        player.off("game:state_update", handler);
+        resolve();
+      };
+      player.on("game:state_update", handler);
+      player.emit("game:move", { cellIndex });
+    });
+  };
+
+  // Make moves to win: X:0, O:3, X:1, O:4, X:2
+  await makeMove(pX, 0);
+  await makeMove(pO, 3);
+  await makeMove(pX, 1);
+  await makeMove(pO, 4);
 
   const finishPromise = new Promise((resolve) => {
     pX.on("game:finish", (data) => resolve(data));

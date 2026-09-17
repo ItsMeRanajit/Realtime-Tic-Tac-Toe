@@ -2,7 +2,11 @@ export const PORT = process.env.PORT || 3000;
 
 export const CLIENT_URL = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(',').map((u) => u.trim())
-  : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+  : [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'https://realtime-tic-tac-toe.vercel.app',
+    ];
 
 export const GAME_CONFIG = {
   DISCONNECT_GRACE_MS: 20000,

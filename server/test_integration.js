@@ -1,6 +1,6 @@
 import { io } from "../tictactoe/node_modules/socket.io-client/build/esm/index.js";
 
-const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = process.env.TEST_SERVER_URL || "http://localhost:3000";
 
 async function runTests() {
   console.log("=== Starting Real-Time Tic-Tac-Toe Integration Tests ===");
@@ -73,13 +73,13 @@ async function runTests() {
   // -------------------------------------------------------------
   const reactionPromise = new Promise((resolve) => {
     clientB.on("reaction:receive", (data) => {
-      if (data.emoji === "🔥") {
+      if (data.emoji === "GG") {
         console.log("✓ Reaction received by Bob:", data.emoji);
         resolve();
       }
     });
   });
-  clientA.emit("reaction:send", { emoji: "🔥" });
+  clientA.emit("reaction:send", { emoji: "GG" });
   await reactionPromise;
 
   // -------------------------------------------------------------
@@ -106,21 +106,28 @@ async function runTests() {
     });
   });
 
+  const makeMove = (player, cellIndex) => {
+    return new Promise((resolve) => {
+      const handler = () => {
+        player.off("game:state_update", handler);
+        resolve();
+      };
+      player.on("game:state_update", handler);
+      player.emit("game:move", { cellIndex });
+    });
+  };
+
   // Turn 1: X plays 0
-  playerX.emit("game:move", { cellIndex: 0 });
-  await new Promise((r) => setTimeout(r, 60));
+  await makeMove(playerX, 0);
 
   // Turn 2: O plays 3
-  playerO.emit("game:move", { cellIndex: 3 });
-  await new Promise((r) => setTimeout(r, 60));
+  await makeMove(playerO, 3);
 
   // Turn 3: X plays 1
-  playerX.emit("game:move", { cellIndex: 1 });
-  await new Promise((r) => setTimeout(r, 60));
+  await makeMove(playerX, 1);
 
   // Turn 4: O plays 4
-  playerO.emit("game:move", { cellIndex: 4 });
-  await new Promise((r) => setTimeout(r, 60));
+  await makeMove(playerO, 4);
 
   // Turn 5: X plays 2 -> Win!
   playerX.emit("game:move", { cellIndex: 2 });
@@ -137,7 +144,7 @@ async function runTests() {
   });
 
   playerX.emit("rematch:request");
-  await new Promise((r) => setTimeout(r, 50));
+  await new Promise((r) => setTimeout(r, 200));
   playerO.emit("rematch:request");
   await rematchPromise;
 
