@@ -1,82 +1,84 @@
-import { createServer } from "http";
-import { Server } from "socket.io";
+import http from 'http';
+import express from 'express';
+import cors from 'cors';
+import { Server } from 'socket.io';
+import { PORT, CLIENT_URL } from './config.js';
+import { roomManager } from './src/roomManager.js';
+import { matchmakingService } from './src/matchmaking.js';
+import { registerSocketHandlers } from './src/socketHandlers.js';
 
-const httpServer = createServer();
+const app = express();
+
+// Enable CORS for express endpoints
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (CLIENT_URL.includes('*') || CLIENT_URL.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive in dev/local setups
+    },
+    methods: ['GET', 'POST'],
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+
+// Health & diagnostics endpoint
+app.get('/health', (req, res) => {
+  const stats = roomManager.getActiveStats();
+  res.json({
+    status: 'healthy',
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    matchmakingQueueLength: matchmakingService.getQueueLength(),
+    rooms: stats,
+  });
+});
+
+// Root ping endpoint
+app.get('/', (req, res) => {
+  res.send('Tic-Tac-Toe Realtime Server is active and running.');
+});
+
+const httpServer = http.createServer(app);
+
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://realtime-tic-tac-toe.vercel.app",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (CLIENT_URL.includes('*') || CLIENT_URL.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    methods: ['GET', 'POST'],
     credentials: true,
   },
-  transports: ["websocket"],
+  pingTimeout: 30000,
+  pingInterval: 25000,
 });
 
-const allUsers = new Map();
-let roomName;
-
-io.on("connection", (socket) => {
-  let opponent = null;
-  allUsers.set(socket.id, { Socket: socket, online: true, playing: false, username: "demo", playingAs: "" });
-
-  socket.on("req_to_play", (data) => {
-    const currUser = allUsers.get(socket.id);
-    currUser.username = data.playerName;
-
-    allUsers.set(socket.id, currUser);
-
-    for (let [id, user] of allUsers) {
-      if (user.online && !user.playing && id !== socket.id && user.username !== "demo") {
-        currUser.playing = true;
-        allUsers.set(socket.id, currUser);
-        opponent = user;
-        opponent.playing = true;
-        allUsers.set(opponent.Socket.id, opponent);
-        break;
-      }
-    }
-
-    if (opponent) {
-      roomName = `room-${currUser.username}-${currUser.Socket.id}`;
-      socket.join(roomName);
-      opponent.Socket.join(roomName);
-
-      io.to(roomName).emit("roomJoined", {
-        room: roomName,
-        players: {
-          currentPlayer: { playerId: currUser.Socket.id, playerName: currUser.username, playingAs: "cross" },
-          opponentPlayer: { playerId: opponent.Socket.id, playerName: opponent.username, playingAs: "circle" },
-        },
-      });
-    } else {
-      currUser.Socket.emit("opponentNotFound");
-    }
-  });
-
-  socket.on("messageSent", function (data) {
-    console.log(data);
-    io.to(roomName).emit("messageRecieved", {
-      message: data,
-      sender: socket.id,
-    });
-  });
-
-  socket.on("playerMoveUser", function (data) {
-    console.log(data);
-    io.to(roomName).emit("updateState", { ...data });
-  });
-
-  socket.on("disconnect", function () {
-    io.to(roomName).emit("playerExit");
-    allUsers.delete(socket.id);
-  });
-  socket.on("removePlayer", function () {
-    allUsers.delete(socket.id);
-    io.to(roomName).emit("playerExit");
-  });
-  socket.on("removePlayerFromSet", function () {
-    allUsers.delete(socket.id);
-  });
+io.on('connection', (socket) => {
+  registerSocketHandlers(io, socket);
 });
 
-httpServer.listen(3000);
+httpServer.listen(PORT, () => {
+  console.log(`========================================`);
+  console.log(`🚀 Tic-Tac-Toe Server running on port ${PORT}`);
+  console.log(`🌐 Allowed CORS: ${JSON.stringify(CLIENT_URL)}`);
+  console.log(`🩺 Health check at http://localhost:${PORT}/health`);
+  console.log(`========================================`);
+});
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Closing server gracefully...');
+  httpServer.close(() => {
+    console.log('Server closed.');
+    process.exit(0);
+  });
+});
