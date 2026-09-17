@@ -28,15 +28,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: [
-          "Quicksand",
-          "Comfortaa",
-          "Outfit",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Segoe UI",
-          "sans-serif",
-        ],
+        sans: ["Quicksand", "Comfortaa", "Outfit", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
       },
       boxShadow: {
         pillowy: "0 10px 30px -5px rgba(236, 72, 153, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03)",
@@ -48,7 +40,7 @@ export default {
         "soft-float": "softFloat 3s ease-in-out infinite",
         "fade-in": "fadeIn 0.25s ease-out forwards",
         "zoom-in": "zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-        "wiggle": "wiggle 1.2s ease-in-out infinite",
+        wiggle: "wiggle 1.2s ease-in-out infinite",
         "pulse-subtle": "pulseSubtle 2s ease-in-out infinite",
       },
       keyframes: {
